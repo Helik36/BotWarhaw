@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/Admin/BotBackend/Backend_channel.py" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/Admin/additional_files/notNeededWords.py" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/Admin/database" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/Admin/database/actionWithDB/config_for_DB.py" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/Admin/database/check_database.py" charset="windows-1251" />
+    <file url="file://$PROJECT_DIR$/test_files" charset="windows-1251" />
+  </component>
+</project>
