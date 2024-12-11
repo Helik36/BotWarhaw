@@ -1,7 +1,9 @@
+import telegram.error
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ConversationHandler
 
 from Admin.database.actionWithDB.actionWithChannelDB import append_in_db_channel, del_from_db_channel
-from Admin.database.actionWithDB.config_for_DB import get_from_db_data
+from Admin.database.actionWithDB.general_query import get_from_db_data
 
 BUTTON, BACK = range(2)
 
@@ -28,9 +30,9 @@ async def handler_view_channel(update, context):
     keyboard = [[InlineKeyboardButton("<< В меню", callback_data='BACK')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    text = await get_channel()
+    current_channel = await get_channel()
 
-    await query.edit_message_text(f"Текущие каналы:\n\n{text}", reply_markup=reply_markup)
+    await query.edit_message_text(f"Текущие каналы:\n\n{current_channel}", reply_markup=reply_markup)
 
 # Добавление каналов
 async def handler_add_channel(update, context):
@@ -38,32 +40,33 @@ async def handler_add_channel(update, context):
     keyboard = [[InlineKeyboardButton("<< В меню", callback_data='BACK')]]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    channel = {}
-
-    user_input = update.message.text
+    user_input = int("-100" + update.message.text)
 
     try:
-        data_channel = await context.bot.get_chat(chat_id=f"@{user_input}")
+        data_channel = await context.bot.get_chat(chat_id=user_input)
+        nameGroup = data_channel.title
 
-    except:
-        await update.message.reply_text("Канал не найден. Некоректное имя",
-                                        reply_markup=reply_markup)
-        return BACK
+        channel = {user_input: nameGroup}
 
+    except telegram.error.BadRequest:
 
-    channel[user_input] = data_channel.id
+        await update.message.reply_text("Возникла проблема, группа не найден", reply_markup=reply_markup)
+        raise telegram.error.BadRequest
+
 
     try:
         await append_in_db_channel(channel)
 
-        text = await get_channel()
+        current_channel = await get_channel()
 
-        await update.message.reply_text(f"Канал `{user_input}` добавлен. Текущие каналы:\n\n{text}", reply_markup=reply_markup)
+        await update.message.reply_text(f"Канал `{nameGroup}` добавлен. Текущие каналы:\n\n{current_channel}")
+        return ConversationHandler.END
 
     except:
-        await update.message.reply_text("Возникла проблема при добавлении названия в БД. Обратитесть к админу Бота", reply_markup=reply_markup)
+        await update.message.reply_text("Возникла проблема при добавлении названия в БД. Обратитесть к админу бота")
 
     return BACK
+
 
 # Удаление каналов
 async def handler_delete_channel(update, context):
@@ -76,9 +79,9 @@ async def handler_delete_channel(update, context):
     try:
         await del_from_db_channel(user_input)
 
-        text = await get_channel()
+        current_channel = await get_channel()
 
-        await update.message.reply_text(f"Канал `{user_input}` удалён. Текущие каналы:\n\n{text}",
+        await update.message.reply_text(f"Канал `{user_input}` удалён. Текущие каналы:\n\n{current_channel}",
                                         reply_markup=reply_markup)
     except:
         await update.message.reply_text("Такой канал отсутствует", reply_markup=reply_markup)

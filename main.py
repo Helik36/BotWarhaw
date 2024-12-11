@@ -1,16 +1,19 @@
 import configparser
 import logging
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardMarkup
 from telegram.ext import Application, ContextTypes, CommandHandler, ConversationHandler, CallbackQueryHandler, \
     MessageHandler, filters
 
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
 
-from Admin.BotBackend.Backend_channel import handler_add_channel, handler_delete_channel
-from Admin.BotBackend.Backend_topic import select_channel, handler_create_topic
+from Admin.BotBackend.BotBackend_channel import handler_add_channel, handler_delete_channel
+from Admin.BotBackend.BotBackend_topic import select_channel, handler_create_topic, handler_add_topic, handler_delete_topic
+
+from Admin.BotBackend.HandlerMessageInChannel.HandlerMessage import handler_add_channel_from_message_in_channel
 
 from Admin.BotHandler_Admin import HandlerForAdmin
+
 from Admin.database.check_database import createbase_for_admin
 
 config = configparser.ConfigParser()
@@ -34,37 +37,40 @@ logging.basicConfig(
  ADD_CHANNEL, DELETE_CHANNEL,
 
  ACTION_WITH_TOPIC,
- VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(10)
+ VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
+
+ SHEDULER,
+ SHEDULER_MESSAGE, SHEDULER_POLL) = range(13)
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    user_id = update.effective_user.id
-    user_name = update.effective_user.first_name
+    main_channel = "-1002448195087"
+    # chat_id = update.effective_chat.id
+    # user_id = update.effective_user.id
+    # user_name = update.effective_user.first_name
     message_text = update.message.text
 
-    # print(update)
-    qq = await context.bot.get_chat(chat_id="-1001090194695")
-    print(qq)
+    print(update)
+    # await context.bot.createForumTopic(chat_id=main_channel, name="mynewtopic")
 
-    # Создание топика с названием. ID передаётся основной канал
-    # print(await context.bot.createForumTopic(chat_id=chat_id, name="mynewtopic"))
-    get_id_topic = update.message.message_thread_id
+    # добавить отдельно ручки для работы с командами в самом канале/топике
+    # print(update.message.chat.id)
 
-    message_for_topic = f"{chat_id}_{get_id_topic}"
+    # message_for_topic = f"{chat_id}_{get_id_topic}"
     # Логирование данных
-    logging.info(f"Сообщение в группе {chat_id} от пользователя {user_id} ({user_name}): {message_text}")
+    # logging.info(f"Сообщение в группе {chat_id} от пользователя {user_id} ({user_name}): {message_text}")
 
     # Если нужно отправить ответ (опционально)
     # await context.bot.send_message(chat_id=chat_id, text=f"Ваш ID: {user_id}")
 
     # Отправка сообщения в конкретный топик
-    await context.bot.send_message(chat_id=message_for_topic, text=f"Ваш ID: {user_id}", message_thread_id=get_id_topic)
+    # await context.bot.send_message(chat_id=message_for_topic, text=f"Ваш ID: {user_id}", message_thread_id=get_id_topic)
+
 
 # Входная точка
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
 
-    if update.message.chat.id != ADMIN_ID:
+    if update.message.from_user.id != ADMIN_ID:
         await _.bot.send_message(chat_id=update.effective_chat.id, text="Access Denied")
 
     else:
@@ -86,7 +92,11 @@ if __name__ == "__main__":
     app = Application.builder().token(TOKEN_BOT).build()
 
     app.add_handler(ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        # Админ
+        entry_points=[CommandHandler("start", start),
+
+                      # Добавить канал через сообщение в канале
+                      CommandHandler("add_channel", handler_add_channel_from_message_in_channel)],
         states={
 
             # Кнопки и возврат
@@ -100,8 +110,10 @@ if __name__ == "__main__":
 
             ACTION_WITH_TOPIC: [CallbackQueryHandler(admin_handler.action_with_topic)],
             CREATE_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_create_topic)],
-            ADD_TOPIC: [],
-            DELETE_TOPIC: []
+            ADD_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_add_topic)],
+            DELETE_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_delete_topic)],
+
+            SHEDULER: [CallbackQueryHandler(admin_handler.create_sheduler_entity)]
         },
         fallbacks=[]
     ))

@@ -1,8 +1,9 @@
+import logging
 import sqlite3
 from datetime import datetime
-from sys import orig_argv
 
-from Admin.database.actionWithDB.config_for_DB import PATH
+from Admin.database.actionWithDB.general_query import PATH
+
 
 path = PATH
 
@@ -12,13 +13,12 @@ async def append_in_db_channel(channnel: dict):
     cursor = conn.cursor()
 
     for i, j in channnel.items():
-        cursor.execute("INSERT INTO channels (id_channel, name) VALUES (?, ?)",
-                       [j, i]) # обрати внимание на порядок переменных
+        cursor.execute("INSERT INTO channels (id_data, name) VALUES (?, ?)",
+                       [i, j])
     conn.commit()
     conn.close()
 
-    return print(f"Канал `{channnel}` - добавлен")
-
+    return logging.info(f"Канал `{channnel}` - добавлен")
 
 async def del_from_db_channel(channnel):
     conn = sqlite3.connect(path)
@@ -29,12 +29,7 @@ async def del_from_db_channel(channnel):
     conn.commit()
     conn.close()
 
-    return print(f"Канал `{channnel}` - удалён")
-
-
-
-
-
+    return logging.info(f"Канал `{channnel}` - удалён")
 
 
 
@@ -52,7 +47,7 @@ async def append_in_db_delete_text_from_cmd(text):
     conn.commit()
 
     conn.close()
-    return print(f"Фильтр `{text}`  для удаления из поста - добавлен")
+    return logging.info(f"Фильтр `{text}`  для удаления из поста - добавлен")
 
 
 # Показать фильтр для удаления текста из поста

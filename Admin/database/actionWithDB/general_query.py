@@ -12,7 +12,7 @@ async def get_from_db_data(table: str) -> dict:
     conn = sqlite3.connect(PATH)
     cursor = conn.cursor()
 
-    query = f"SELECT id, name FROM {table}"
+    query = f"SELECT id_data, name FROM {table}"
     names_table_data = {}
     for i, j in cursor.execute(query):
         names_table_data[i] = j
@@ -26,7 +26,7 @@ async def select_id_channel(table, name):
     conn = sqlite3.connect(PATH)
     cursor = conn.cursor()
 
-    query = f"SELECT id_channel FROM {table} WHERE name = '{name}'"
+    query = f"SELECT id_data FROM {table} WHERE name = '{name}'"
     name_id = []
     for i in cursor.execute(query):
         name_id.append(i[0])

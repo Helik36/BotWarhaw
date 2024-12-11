@@ -1,5 +1,8 @@
+import logging
 import sqlite3
-from config_for_DB import PATH
+
+
+from Admin.database.actionWithDB.general_query import PATH
 
 path = PATH
 
@@ -9,21 +12,21 @@ async def append_in_db_topic(topic: dict):
 
     for i, j in topic.items():
         print(f"{j} - {i}")
-        cursor.execute("INSERT INTO channels (id_channel, name_channel) VALUES (?, ?)",
-                       [j, i]) # обрати внимание на порядок переменных
+        cursor.execute("INSERT INTO topics (id_data, name) VALUES (?, ?)",
+                       [i, j]) # РѕР±СЂР°С‚Рё РІРЅРёРјР°РЅРёРµ РЅР° РїРѕСЂСЏРґРѕРє РїРµСЂРµРјРµРЅРЅС‹С…
     conn.commit()
     conn.close()
 
-    return print(f"Топик/тема `{topic}` - добавлен")
+    return logging.info(f"РўРѕРїРёРє/С‚РµРјР° `{topic}` - РґРѕР±Р°РІР»РµРЅ")
 
 
-async def del_from_db_topic(channnel):
+async def del_from_db_topic(topic):
     conn = sqlite3.connect(path)
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM channels WHERE name_channel = ?", [channnel])
+    cursor.execute("DELETE FROM topics WHERE name = ?", [topic])
 
     conn.commit()
     conn.close()
 
-    return print(f"Топик/тема `{channnel}` - удалён")
+    return logging.info(f"РўРѕРїРёРє/С‚РµРјР° `{topic}` - СѓРґР°Р»С‘РЅ")

@@ -1,20 +1,36 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
+from Admin.BotBackend.BotBackend_topic import handler_view_topics
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
-from Admin.BotBackend.Backend_channel import handler_view_channel
-from Admin.database.actionWithDB.config_for_DB import get_from_db_data
+from Admin.BotBackend.BotBackend_channel import handler_view_channel
+from Admin.database.actionWithDB.general_query import get_from_db_data
 
-command_button = (BUTTON, BACK,
+(BUTTON, BACK,
 
  ACTION_WITH_CHANNEL,
  ADD_CHANNEL, DELETE_CHANNEL,
 
  ACTION_WITH_TOPIC,
- VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(10)
+ VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
+
+ SHEDULER,
+ SHEDULER_MESSAGE, SHEDULER_POLL) = range(13)
 
 
 class HandlerForAdmin:
+
+    async def check_callback_query(self, case):
+
+        keyboard = []
+
+        channels = await get_from_db_data("channels")
+
+        for id_channel, name in channels.items():
+            keyboard.append([InlineKeyboardButton(f"{name}", callback_data=case)])
+
+        return InlineKeyboardMarkup(keyboard)
+
 
     # Вызывается когда нажимается кнопка Назад
     async def back(self, update, _):
@@ -35,6 +51,7 @@ class HandlerForAdmin:
     async def button(self, update, _):
         query = update.callback_query
         choice = query.data
+
         await query.answer()
 
         match choice:
@@ -60,6 +77,15 @@ class HandlerForAdmin:
                 await query.edit_message_text("Выберете действие: ", reply_markup=menu_markup)
                 return ACTION_WITH_TOPIC
 
+            case "SHEDULER":
+
+                keyboard = [[InlineKeyboardButton("> Запланировать пост сообщения", callback_data='SHEDULER_MESSAGE')],
+                            [InlineKeyboardButton("> Запланирировать опрос", callback_data='SHEDULER_POLL')]]
+                menu_markup = InlineKeyboardMarkup(keyboard)
+
+                await query.edit_message_text("Выберете действие: ", reply_markup=menu_markup)
+                return SHEDULER
+
 
     async def action_with_channel(self, update, _):
 
@@ -74,11 +100,11 @@ class HandlerForAdmin:
                 return BACK
 
             case "ADD_CHANNEL":
-                await query.edit_message_text("Напишите название канала: ")
+                await query.edit_message_text("Вставьте ID группы: ")
                 return ADD_CHANNEL
 
             case "DELETE_CHANNEL":
-                await query.edit_message_text("Напишите название канала (не ID), которое нужно удалить")
+                await query.edit_message_text("Напишите название группы, которое нужно удалить")
                 return DELETE_CHANNEL
 
             case _ :
@@ -98,33 +124,35 @@ class HandlerForAdmin:
         choice = query.data
         await query.answer()
 
+
         match choice:
 
             case "VIEW_TOPIC":
-                await handler_view_channel(update, context)
+                await handler_view_topics(update, context)
                 return BACK
 
             case "CREATE_TOPIC":
 
-                keyboard = []
-
-                channels = await get_from_db_data("channels")
-
-                for id, name in channels.items():
-
-                    keyboard.append([InlineKeyboardButton(f"{name}", callback_data="CREATE_TOPIC")])
-                reply_markup = InlineKeyboardMarkup(keyboard)
+                reply_markup = await self.check_callback_query("CREATE_TOPIC")
 
                 await query.edit_message_text("Для какого канала нужно создать топик?", reply_markup=reply_markup)
 
                 return CREATE_TOPIC
 
             case "ADD_TOPIC":
-                await query.edit_message_text("Напишите название канала: ")
+
+                reply_markup = await self.check_callback_query("ADD_TOPIC")
+
+                await query.edit_message_text("Для какого канала нужно добавить топик?", reply_markup=reply_markup)
+
                 return ADD_TOPIC
 
             case "DELETE_TOPIC":
-                await query.edit_message_text("Напишите название канала (не ID), которое нужно удалить")
+
+                reply_markup = await self.check_callback_query("DELETE_TOPIC")
+
+                await query.edit_message_text("Из какого канала нужно удалить топик?", reply_markup=reply_markup)
+
                 return DELETE_TOPIC
 
             case _:
@@ -137,3 +165,19 @@ class HandlerForAdmin:
 
                 await query.edit_message_text('Пожалуйста, выберите:', reply_markup=reply_markup)
                 return BUTTON
+
+
+    async def create_sheduler_entity(self, update, context: ContextTypes.DEFAULT_TYPE):
+
+        query = update.callback_query
+        choice = query.data
+        await query.answer()
+
+        match choice:
+
+            case "SHEDULER_MESSAGE":
+                pass
+
+            case "SHEDULER_POLL":
+                pass
+

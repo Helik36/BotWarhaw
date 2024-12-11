@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 import sqlite3
 
 
@@ -12,22 +11,16 @@ def createbase_for_admin():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS channels (
         id INTEGER PRIMARY KEY,
-        id_channel INTEGER,
+        id_data INTEGER,
         name TEXT NOT NULL
     )
     """)
 
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS DBdelete_text (
+    CREATE TABLE IF NOT EXISTS topics (
         id INTEGER PRIMARY KEY,
-        text_trigger TEXT NOT NULL
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS time_pause_for_post (
-        id INTEGER PRIMARY KEY,
-        time_end_pause_post TEXT NOT NULL
+        id_data INTEGER,
+        name TEXT NOT NULL
     )
     """)
 
