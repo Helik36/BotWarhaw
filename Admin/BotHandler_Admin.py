@@ -14,8 +14,8 @@ from Admin.database.actionWithDB.general_query import get_from_db_data
  ACTION_WITH_TOPIC,
  VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
 
- SHEDULER,
- SHEDULER_MESSAGE, SHEDULER_POLL) = range(13)
+ SCHEDULER,
+ SCHEDULER_MESSAGE, SCHEDULER_POLL) = range(13)
 
 
 class HandlerForAdmin:
@@ -77,14 +77,14 @@ class HandlerForAdmin:
                 await query.edit_message_text("Выберете действие: ", reply_markup=menu_markup)
                 return ACTION_WITH_TOPIC
 
-            case "SHEDULER":
+            case "SCHEDULER":
 
-                keyboard = [[InlineKeyboardButton("> Запланировать пост сообщения", callback_data='SHEDULER_MESSAGE')],
-                            [InlineKeyboardButton("> Запланирировать опрос", callback_data='SHEDULER_POLL')]]
+                keyboard = [[InlineKeyboardButton("> Запланировать пост сообщения", callback_data='SCHEDULER_MESSAGE')],
+                            [InlineKeyboardButton("> Запланирировать опрос", callback_data='SCHEDULER_POLL')]]
                 menu_markup = InlineKeyboardMarkup(keyboard)
 
                 await query.edit_message_text("Выберете действие: ", reply_markup=menu_markup)
-                return SHEDULER
+                return SCHEDULER
 
 
     async def action_with_channel(self, update, _):
@@ -169,15 +169,20 @@ class HandlerForAdmin:
 
     async def create_sheduler_entity(self, update, context: ContextTypes.DEFAULT_TYPE):
 
+        chat_id = update.callback_query.from_user.id
         query = update.callback_query
         choice = query.data
+
         await query.answer()
 
         match choice:
 
-            case "SHEDULER_MESSAGE":
-                pass
+            case "SCHEDULER_MESSAGE":
 
-            case "SHEDULER_POLL":
+                await context.bot.send_message(chat_id=chat_id, text="Напиши текст, который нужно запланировать")
+
+                return SCHEDULER_MESSAGE
+
+            case "SCHEDULER_POLL":
                 pass
 

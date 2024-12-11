@@ -6,7 +6,7 @@ def button_menu():
     keyboard = [
         [InlineKeyboardButton("Действие с каналами", callback_data='ACTION_WITH_CHANNEL')],
         [InlineKeyboardButton("Действие с топиками", callback_data='ACTION_WITH_TOPIC')],
-        [InlineKeyboardButton("Запланировать", callback_data='SHEDULER')]
+        [InlineKeyboardButton("Запланировать", callback_data='SCHEDULER')]
     ]
 
     return keyboard

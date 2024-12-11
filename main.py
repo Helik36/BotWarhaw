@@ -13,8 +13,7 @@ from Admin.BotBackend.BotBackend_topic import select_channel, handler_create_top
 from Admin.BotBackend.HandlerMessageInChannel.HandlerMessage import handler_add_channel_from_message_in_channel
 
 from Admin.BotHandler_Admin import HandlerForAdmin
-from Admin.Scheduler.WorkWithScheduler import Scheduler
-from Admin.Scheduler.message_sheduler import scheduler_message
+from Admin.BotBackend.BotBackend_scheduler.BotBackend_scheduler import Scheduler
 
 from Admin.database.check_database import createbase_for_admin
 
@@ -41,8 +40,8 @@ logging.basicConfig(
  ACTION_WITH_TOPIC,
  VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
 
- SHEDULER,
- SHEDULER_MESSAGE, SHEDULER_POLL) = range(13)
+ SCHEDULER,
+ SCHEDULER_MESSAGE, SCHEDULER_POLL) = range(13)
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -61,10 +60,14 @@ async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     chat_id = update.message.from_user.id
 
-    scheduler = Scheduler(update, context)
-    logging.info("create scheduler message")
+    context.bot.send_message(chat_id=chat_id, text="Напиши текст, который нужно отправлять")
 
-    scheduler.create_new_cheduler()
+
+    #
+    # scheduler = Scheduler(update, context)
+    # logging.info("create scheduler message")
+    #
+    # scheduler.create_new_cheduler()
     # context.job_queue.run_repeating(callback=scheduler_message, interval=5, chat_id=chat_id)
 
 
@@ -74,7 +77,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # user_name = update.effective_user.first_name
     message_text = update.message.text
 
-    print(update)
+    # print(update)
     # await context.bot.createForumTopic(chat_id=main_channel, name="mynewtopic")
 
     # добавить отдельно ручки для работы с командами в самом канале/топике
@@ -111,6 +114,8 @@ async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
 if __name__ == "__main__":
 
     admin_handler = HandlerForAdmin()
+    scheduler = Scheduler()
+
     createbase_for_admin()
 
     app = Application.builder().token(TOKEN_BOT).build()
@@ -133,12 +138,19 @@ if __name__ == "__main__":
             ADD_CHANNEL: [MessageHandler(filters.TEXT, handler_add_channel)],
             DELETE_CHANNEL: [MessageHandler(filters.TEXT, handler_delete_channel)],
 
+
             ACTION_WITH_TOPIC: [CallbackQueryHandler(admin_handler.action_with_topic)],
             CREATE_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_create_topic)],
             ADD_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_add_topic)],
             DELETE_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_delete_topic)],
 
-            SHEDULER: [CallbackQueryHandler(admin_handler.create_sheduler_entity)]
+
+            SCHEDULER: [CallbackQueryHandler(admin_handler.create_sheduler_entity)],
+            SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler),
+                                CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+
+
+
         },
         fallbacks=[]
     ))
