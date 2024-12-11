@@ -1,5 +1,6 @@
+import logging
+
 import telegram.error
-from sqlalchemy.testing.plugin.plugin_base import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler
 

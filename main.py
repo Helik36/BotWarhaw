@@ -13,6 +13,8 @@ from Admin.BotBackend.BotBackend_topic import select_channel, handler_create_top
 from Admin.BotBackend.HandlerMessageInChannel.HandlerMessage import handler_add_channel_from_message_in_channel
 
 from Admin.BotHandler_Admin import HandlerForAdmin
+from Admin.Scheduler.WorkWithScheduler import Scheduler
+from Admin.Scheduler.message_sheduler import scheduler_message
 
 from Admin.database.check_database import createbase_for_admin
 
@@ -43,8 +45,30 @@ logging.basicConfig(
  SHEDULER_MESSAGE, SHEDULER_POLL) = range(13)
 
 
+async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    """
+    Реализация:
+    По команде можно выбирается создать планировщик сообщений или опросов
+
+    Планирововщик сообщений:
+    1) Выбрать канал
+    1.1) Выбрать топик
+    2) Указать текст
+    3) Выбрать как часто
+
+    """
+
+    chat_id = update.message.from_user.id
+
+    scheduler = Scheduler(update, context)
+    logging.info("create scheduler message")
+
+    scheduler.create_new_cheduler()
+    # context.job_queue.run_repeating(callback=scheduler_message, interval=5, chat_id=chat_id)
+
+
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    main_channel = "-1002448195087"
     # chat_id = update.effective_chat.id
     # user_id = update.effective_user.id
     # user_name = update.effective_user.first_name
@@ -91,6 +115,7 @@ if __name__ == "__main__":
 
     app = Application.builder().token(TOKEN_BOT).build()
 
+    app.add_handler(CommandHandler("mess", mess))
     app.add_handler(ConversationHandler(
         # Админ
         entry_points=[CommandHandler("start", start),
