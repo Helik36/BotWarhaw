@@ -41,7 +41,9 @@ logging.basicConfig(
  VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
 
  SCHEDULER,
- SCHEDULER_MESSAGE, SCHEDULER_POLL) = range(13)
+ SETTING_SHEDULER, SCHEDULER_POLL) = range(13)
+
+(CHOICE,HOUR) = 15, 16
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -120,6 +122,17 @@ if __name__ == "__main__":
 
     app = Application.builder().token(TOKEN_BOT).build()
 
+    second_level =(ConversationHandler(
+        entry_points=[MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
+        states={
+            CHOICE: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+            HOUR: [CallbackQueryHandler(scheduler.create_new_cheduler)]
+        },
+        fallbacks=[]
+    ))
+
+    selection_handler = [second_level]
+
     app.add_handler(CommandHandler("mess", mess))
     app.add_handler(ConversationHandler(
         # Админ
@@ -146,11 +159,7 @@ if __name__ == "__main__":
 
 
             SCHEDULER: [CallbackQueryHandler(admin_handler.create_sheduler_entity)],
-            SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler),
-                                CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
-
-
-
+            SETTING_SHEDULER: selection_handler
         },
         fallbacks=[]
     ))
