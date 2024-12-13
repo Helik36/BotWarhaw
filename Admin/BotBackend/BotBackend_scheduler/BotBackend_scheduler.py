@@ -1,16 +1,19 @@
 import logging
 
-from langchain_core.runnables import chain
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
 from Admin.BotBackend.BotBackend_scheduler.message_sheduler import scheduler_message
 
-(BUTTON, BACK,
- SCHEDULER_MESSAGE)= range(3)
+# Button
+(BUTTON, BACK)= range(2)
 
-(CHOICE, HOUR) = 15, 16
+#SCHEDULER
+(SCHEDULER,
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, SCHEDULER_POLL) = range(10, 14)
+
+(CHOICE,HOUR) = 15, 16
 
 class Scheduler:
 
@@ -32,7 +35,7 @@ class Scheduler:
 
         keyboard = [[]]
 
-        if query != "NEXT" or query == BACK:
+        if query != "NEXT" or query == "BACK":
 
             for i in range(13):
                 if i <= 9:
@@ -48,6 +51,16 @@ class Scheduler:
             keyboard.append([InlineKeyboardButton(text="> Дальше", callback_data='NEXT')])
             return InlineKeyboardMarkup(keyboard)
 
+        if query == "NEXT":
+
+            for i in range(13, 24):
+
+                    text = f"{i}:00"
+
+                    keyboard.append([InlineKeyboardButton(text=text, callback_data='SET_TIME')])
+
+            keyboard.append([InlineKeyboardButton(text=">Назад", callback_data='NEXT')])
+            return InlineKeyboardMarkup(keyboard)
 
     # async def check_time(self, update, context):
     #
@@ -92,7 +105,7 @@ class Scheduler:
 
         await context.bot.send_message(chat_id=chat_id, text="Выберете как часто будет отправляться: ", reply_markup=menu_markup)
 
-        return CHOICE
+        return SCHEDULER_CONFIG_DAY
 
 
     async def setting_scheduler_select_repeat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -110,6 +123,7 @@ class Scheduler:
 
             case "EVERY_DAY":
 
+                print(type_callback_query)
                 menu_markup = await self.__create_time(type_callback_query)
 
                 await update.callback_query.edit_message_text(text=type_callback_query,  reply_markup=menu_markup)

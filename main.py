@@ -38,10 +38,11 @@ logging.basicConfig(
  ADD_CHANNEL, DELETE_CHANNEL,
 
  ACTION_WITH_TOPIC,
- VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
+ VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(10)
 
- SCHEDULER,
- SETTING_SHEDULER, SCHEDULER_POLL) = range(13)
+#SCHEDULER
+(SCHEDULER,
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, SCHEDULER_POLL) = range(10, 14)
 
 (CHOICE,HOUR) = 15, 16
 
@@ -158,8 +159,17 @@ if __name__ == "__main__":
             DELETE_TOPIC: [CallbackQueryHandler(select_channel), MessageHandler(filters.TEXT, handler_delete_topic)],
 
 
-            SCHEDULER: [CallbackQueryHandler(admin_handler.create_sheduler_entity)],
-            SETTING_SHEDULER: selection_handler
+            SCHEDULER: [ConversationHandler(
+                entry_points=[CallbackQueryHandler(admin_handler.create_sheduler_entity)],
+                states={
+                    SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
+                    SCHEDULER_CONFIG_DAY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+                    HOUR: [CallbackQueryHandler(scheduler.create_new_cheduler)]
+                },
+                fallbacks=[]
+            )
+                ],
+            # SETTING_SHEDULER: selection_handler
         },
         fallbacks=[]
     ))
