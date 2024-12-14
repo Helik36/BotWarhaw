@@ -44,7 +44,7 @@ logging.basicConfig(
 (SCHEDULER,
  SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, SCHEDULER_POLL) = range(10, 14)
 
-(CHOICE,HOUR) = 15, 16
+(CHOICE, CONFIG_SCHEDULER, CREATE_NEW_CCHEDULER) = 15, 16, 17
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -123,16 +123,16 @@ if __name__ == "__main__":
 
     app = Application.builder().token(TOKEN_BOT).build()
 
-    second_level =(ConversationHandler(
-        entry_points=[MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
-        states={
-            CHOICE: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
-            HOUR: [CallbackQueryHandler(scheduler.create_new_cheduler)]
-        },
-        fallbacks=[]
-    ))
+    # second_level =(ConversationHandler(
+    #     entry_points=[MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
+    #     states={
+    #         CHOICE: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+    #         HOUR: [CallbackQueryHandler(scheduler.create_new_cheduler)]
+    #     },
+    #     fallbacks=[]
+    # ))
 
-    selection_handler = [second_level]
+    # selection_handler = [second_level]
 
     app.add_handler(CommandHandler("mess", mess))
     app.add_handler(ConversationHandler(
@@ -164,7 +164,8 @@ if __name__ == "__main__":
                 states={
                     SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
                     SCHEDULER_CONFIG_DAY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
-                    HOUR: [CallbackQueryHandler(scheduler.create_new_cheduler)]
+                    CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_cheduler)],
+                    CREATE_NEW_CCHEDULER: []
                 },
                 fallbacks=[]
             )
