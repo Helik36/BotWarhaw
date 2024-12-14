@@ -4,18 +4,21 @@ from telegram.ext import ContextTypes
 from Admin.BotBackend.BotBackend_topic import handler_view_topics
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
 from Admin.BotBackend.BotBackend_channel import handler_view_channel
+from Admin.another_def import get_previous_message
 from Admin.database.actionWithDB.general_query import get_from_db_data
 
-(BUTTON, BACK,
+(BUTTON, BACK) = range(2)
 
- ACTION_WITH_CHANNEL,
- ADD_CHANNEL, DELETE_CHANNEL,
+(ACTION_WITH_CHANNEL,
+ ADD_CHANNEL, DELETE_CHANNEL) = range(2, 5)
 
- ACTION_WITH_TOPIC,
- VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC,
+(ACTION_WITH_TOPIC,
+CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
- SCHEDULER,
- SCHEDULER_MESSAGE, SCHEDULER_POLL) = range(13)
+# SCHEDULER
+(SCHEDULER,
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
+ EXIT_SCHEDULER) = range(9, 14)
 
 
 class HandlerForAdmin:
@@ -33,7 +36,9 @@ class HandlerForAdmin:
 
 
     # Вызывается когда нажимается кнопка Назад
+
     async def back(self, update, _):
+
         query = update.callback_query
         await query.answer()
 
@@ -49,6 +54,7 @@ class HandlerForAdmin:
 
 
     async def button(self, update, _):
+
         query = update.callback_query
         choice = query.data
 
@@ -80,7 +86,8 @@ class HandlerForAdmin:
             case "SCHEDULER":
 
                 keyboard = [[InlineKeyboardButton("> Запланировать пост сообщения", callback_data='SCHEDULER_MESSAGE')],
-                            [InlineKeyboardButton("> Запланирировать опрос", callback_data='SCHEDULER_POLL')]]
+                            [InlineKeyboardButton("> Запланирировать опрос", callback_data='SCHEDULER_POLL')],
+                            [InlineKeyboardButton("< В меню", callback_data='BACK')]]
                 menu_markup = InlineKeyboardMarkup(keyboard)
 
                 await query.edit_message_text("Выберете действие: ", reply_markup=menu_markup)
@@ -123,7 +130,6 @@ class HandlerForAdmin:
         query = update.callback_query
         choice = query.data
         await query.answer()
-
 
         match choice:
 
@@ -179,7 +185,9 @@ class HandlerForAdmin:
 
             case "SCHEDULER_MESSAGE":
 
-                await context.bot.send_message(chat_id=chat_id, text="Напиши текст, который нужно запланировать")
+                message_id = await get_previous_message(update, context)
+
+                await context.bot.edit_message_text(chat_id=chat_id, text="Напиши текст, который нужно запланировать", message_id=message_id)
 
                 return SCHEDULER_MESSAGE
 

@@ -1,25 +1,11 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-import configparser
-import logging
+from datetime import datetime
 
-config = configparser.ConfigParser()
-config.read("config.ini")
+set_time = "SET_TIME_12"
 
-logging.basicConfig(
-            format="\n[%(asctime)s]: %(levelname)s - %(funcName)s: %(lineno)d - %(message)s",
-            level=logging.INFO)
+qq = set_time.split("_")
 
+ww = next(j for j in qq if j.isdigit())
 
-TOKEN_BOT = config["api_token"]["api_TOKEN"]
-ADMIN_ID = config['ADMIN_ID']["my_id"]
+print(ww)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(f'Hello {update.effective_user.first_name}')
-
-
-app = ApplicationBuilder().token(TOKEN_BOT).build()
-
-app.add_handler(CommandHandler("start", start))
-
-app.run_polling()
+print(datetime.now().day)

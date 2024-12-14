@@ -32,19 +32,18 @@ logging.basicConfig(
             format="\n[%(asctime)s]: %(levelname)s - %(funcName)s: %(lineno)d - %(message)s",
             level=logging.INFO)
 
-(BUTTON, BACK,
+(BUTTON, BACK) = range(2)
 
- ACTION_WITH_CHANNEL,
- ADD_CHANNEL, DELETE_CHANNEL,
+(ACTION_WITH_CHANNEL,
+ ADD_CHANNEL, DELETE_CHANNEL) = range(2, 5)
 
- ACTION_WITH_TOPIC,
- VIEW_TOPIC, CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(10)
+(ACTION_WITH_TOPIC,
+CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
-#SCHEDULER
+# SCHEDULER
 (SCHEDULER,
- SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, SCHEDULER_POLL) = range(10, 14)
-
-(CHOICE, CONFIG_SCHEDULER, CREATE_NEW_CCHEDULER) = 15, 16, 17
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
+ EXIT_SCHEDULER) = range(9, 14)
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -99,6 +98,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Входная точка
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
+    print(__name__)
 
     if update.message.from_user.id != ADMIN_ID:
         await _.bot.send_message(chat_id=update.effective_chat.id, text="Access Denied")
@@ -164,13 +164,13 @@ if __name__ == "__main__":
                 states={
                     SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
                     SCHEDULER_CONFIG_DAY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
-                    CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_cheduler)],
-                    CREATE_NEW_CCHEDULER: []
+                    CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_cheduler)]
                 },
-                fallbacks=[]
-            )
-                ],
-            # SETTING_SHEDULER: selection_handler
+                fallbacks=[],
+                map_to_parent={
+                    EXIT_SCHEDULER: ConversationHandler.END
+                })
+            ],
         },
         fallbacks=[]
     ))
