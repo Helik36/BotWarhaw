@@ -2,7 +2,7 @@ import logging
 from datetime import datetime, timedelta
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes, ConversationHandler
+from telegram.ext import ContextTypes
 
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
 from Admin.BotBackend.BotBackend_scheduler.message_sheduler import scheduler_message
@@ -13,8 +13,8 @@ from Admin.another_def import get_previous_message
 
 #SCHEDULER
 (SCHEDULER,
- SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY,CONFIG_SCHEDULER,
- EXIT_SCHEDULER) = range(10, 15)
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
+ EXIT_SCHEDULER) = range(9, 14)
 
 
 class Scheduler:
@@ -186,7 +186,7 @@ class Scheduler:
 
                 logging.info("create scheduler message")
 
-                time_interval = timedelta(seconds=5)
+                time_interval = timedelta(days=1)
                 first_run = await self.__setting_time(type_callback_query)
 
                 # await context.bot.send_message(chat_id=chat_id, text=type_callback_query)
@@ -196,6 +196,7 @@ class Scheduler:
                     text=f"Сообщение запланировано", chat_id=chat_id, message_id=message_id)
 
                 context.job_queue.run_repeating(callback=scheduler_message, interval=time_interval, first=first_run, chat_id=chat_id)
+                print(context.job_queue.jobs())
 
                 ##############################
                 # тут нужно сделать сохранение данных в БД
