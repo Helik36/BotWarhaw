@@ -7,12 +7,12 @@ from telegram.ext import ContextTypes
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
 from Admin.BotBackend.BotBackend_scheduler.message_sheduler import scheduler_message
 from Admin.database.actionWithDB.actionWithTopicDB import get_topic_from_channel
-from Admin.database.actionWithDB.general_query import get_from_db_data
+from Admin.database.actionWithDB.general_query import get_from_db_data, select_id_channel
 
 # Button
 (BUTTON, BACK) = range(2)
 
-#SCHEDULER
+# SCHEDULER
 (SCHEDULER, SELECT_TOPIC_FROM_CHANNEL, CREATE_SCHEDULER_ENTITY,
  SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
  EXIT_SCHEDULER) = range(9, 16)
@@ -32,7 +32,6 @@ class Scheduler:
 
         return query_from_user_id
 
-
     async def back(self, update, _):
         query = update.callback_query
         await query.answer()
@@ -46,7 +45,6 @@ class Scheduler:
         await query.edit_message_text('Пожалуйста, выберите:', reply_markup=reply_markup)
 
         return BUTTON
-
 
     async def __create_time(self, query):
 
@@ -71,14 +69,12 @@ class Scheduler:
         if query == "BUTTOM_NEXT":
 
             for i in range(13, 24):
+                text = f"{i}:00"
 
-                    text = f"{i}:00"
-
-                    keyboard.append([InlineKeyboardButton(text=text, callback_data=f'SET_TIME_{i}')])
+                keyboard.append([InlineKeyboardButton(text=text, callback_data=f'SET_TIME_{i}')])
 
             keyboard.append([InlineKeyboardButton(text="<Назад", callback_data='BUTTOM_BACK')])
             return InlineKeyboardMarkup(keyboard)
-
 
     async def __setting_time(self, get_hour):
 
@@ -108,7 +104,6 @@ class Scheduler:
 
         return setting
 
-
     async def select_channel(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         query = update.callback_query
@@ -128,10 +123,10 @@ class Scheduler:
 
         menu_markup = InlineKeyboardMarkup(keyboard)
 
-        await context.bot.edit_message_text(chat_id=from_user, text="Выберете канал: ", reply_markup=menu_markup, message_id=message_id)
+        await context.bot.edit_message_text(chat_id=from_user, text="Выберете канал: ", reply_markup=menu_markup,
+                                            message_id=message_id)
 
         return SELECT_TOPIC_FROM_CHANNEL
-
 
     async def select_topic_from_channel(self, update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -139,7 +134,8 @@ class Scheduler:
         await query.answer()
 
         selected_channel = query.data
-        context.user_data["selected_channel"] = selected_channel
+
+        context.user_data["selected_channel"] = await select_id_channel("channels", selected_channel)
 
         from_user = await self.__query_from_user(update, context)
         message_id = await self.__get_previous_message(update, context)
@@ -147,8 +143,8 @@ class Scheduler:
         topics = await get_topic_from_channel(selected_channel)
 
         keyboard = []
-        for topic in topics:
-            keyboard.append([InlineKeyboardButton(f"{topic}", callback_data=topic)])
+        for id_data, topic in topics.items():
+            keyboard.append([InlineKeyboardButton(f"{topic}", callback_data=id_data)])
 
         menu_markup = InlineKeyboardMarkup(keyboard)
 
@@ -157,14 +153,14 @@ class Scheduler:
 
         return CREATE_SCHEDULER_ENTITY
 
-
     async def create_scheduler_entity(self, update, context: ContextTypes.DEFAULT_TYPE):
 
         chat_id = update.callback_query.from_user.id
         query = update.callback_query
-        topic = query.data
+        topic_id = query.data
 
-        context.user_data["selected_topic"] = topic
+        context.user_data["selected_topic"] = topic_id
+        print(topic_id)
 
         await query.answer()
 
@@ -174,21 +170,21 @@ class Scheduler:
 
                 message_id = await self.__get_previous_message(update, context)
 
-                await context.bot.edit_message_text(chat_id=chat_id, text="Напиши текст, который нужно запланировать", message_id=message_id)
+                await context.bot.edit_message_text(chat_id=chat_id, text="Напиши текст, который нужно запланировать",
+                                                    message_id=message_id)
 
                 return SCHEDULER_MESSAGE
 
             case "SCHEDULER_POLL":
                 pass
 
-
     async def setting_scheduler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-
 
         chat_id = update.message.from_user.id
 
         ##################################
         target_text = update.message.text
+        context.user_data["target_text"] = target_text
         # Тут должно быть сохранение в БД
         ##################################
 
@@ -198,10 +194,10 @@ class Scheduler:
                     [InlineKeyboardButton("< В меню", callback_data='BACK')]]
         menu_markup = InlineKeyboardMarkup(keyboard)
 
-        await context.bot.send_message(chat_id=chat_id, text="Выберете как часто будет отправляться: ", reply_markup=menu_markup)
+        await context.bot.send_message(chat_id=chat_id, text="Выберете как часто будет отправляться: ",
+                                       reply_markup=menu_markup)
 
         return SCHEDULER_CONFIG_DAY
-
 
     async def setting_scheduler_select_repeat(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -211,8 +207,6 @@ class Scheduler:
         type_callback_query = update.callback_query.data
 
         from_user = query.from_user.id
-        get_sent_channel = query.message.reply_markup.inline_keyboard[0][0].text # Нужно передлать
-        context.user_data["select_channel"] = get_sent_channel
 
         match type_callback_query:
 
@@ -220,10 +214,9 @@ class Scheduler:
 
                 menu_markup = await self.__create_time(type_callback_query)
 
-                await update.callback_query.edit_message_text(text="Выбери время",  reply_markup=menu_markup)
+                await update.callback_query.edit_message_text(text="Выбери время", reply_markup=menu_markup)
 
                 return CONFIG_SCHEDULER
-
 
             case "SPECIFIC_DAY":
 
@@ -233,7 +226,6 @@ class Scheduler:
 
                 await context.bot.send_message(chat_id=from_user, text=type_callback_query)
 
-
     async def create_new_scheduler(self, update, context: ContextTypes.DEFAULT_TYPE):
 
         query = update.callback_query
@@ -242,29 +234,38 @@ class Scheduler:
 
         type_callback_query = update.callback_query.data
 
+        message_id = await self.__get_previous_message(update, context)
+
         if "SET_TIME" in type_callback_query:
             logging.info("create scheduler message")
 
             time_interval = timedelta(days=1)
+
             first_run = await self.__setting_time(type_callback_query)
 
-            # await context.bot.send_message(chat_id=chat_id, text=type_callback_query)
+            id_channel = context.user_data["selected_channel"]
+            topic_id = context.user_data["selected_topic"]
+            target_text = context.user_data["target_text"]
 
-            message_id = await self.__get_previous_message(update, context)
+            context.job_queue.run_repeating(callback=scheduler_message, interval=time_interval, first=first_run,
+                                            chat_id=id_channel, data={"target_text": target_text, "topic_id": topic_id})
+            print(context.job_queue.jobs())
+
+            ##############################
+            """
+            тут нужно сделать сохранение данных в БД, чтобы они при перезапуске бота автоматически создавались
+            1) Канал
+            2) Топик
+            3) Частота и время
+            4) Текст
+            """
+            ##############################
 
             keyboard = [[InlineKeyboardButton("< В меню", callback_data='BACK')]]
             menu_markup = InlineKeyboardMarkup(keyboard)
 
             await context.bot.edit_message_text(
                 text=f"Сообщение запланировано", chat_id=chat_id, message_id=message_id, reply_markup=menu_markup)
-
-            context.job_queue.run_repeating(callback=scheduler_message, interval=time_interval, first=first_run,
-                                            chat_id=chat_id)
-            print(context.job_queue.jobs())
-
-            ##############################
-            # тут нужно сделать сохранение данных в БД
-            ##############################
 
             context.user_data.clear()
             return EXIT_SCHEDULER
@@ -285,7 +286,7 @@ class Scheduler:
                 print(type_callback_query)
 
                 menu_markup = await self.__create_time(type_callback_query)
-                await update.callback_query.edit_message_text(text=type_callback_query,  reply_markup=menu_markup)
+                await update.callback_query.edit_message_text(text=type_callback_query, reply_markup=menu_markup)
 
                 return CONFIG_SCHEDULER
 

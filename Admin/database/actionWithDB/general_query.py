@@ -1,3 +1,4 @@
+import asyncio
 import sqlite3
 
 PATH = "Admin/database/DataChannelAndChat.db"
@@ -34,4 +35,9 @@ async def select_id_channel(table, name):
 
     print(name_id[0])
     return name_id[0]
+
+if __name__ == "__main__":
+
+    PATH = "../DataChannelAndChat.db"
+    asyncio.run(select_id_channel("channels", "MyTestGroup"))
 
