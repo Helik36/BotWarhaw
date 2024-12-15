@@ -4,7 +4,6 @@ from telegram.ext import ContextTypes
 from Admin.BotBackend.BotBackend_topic import handler_view_topics
 from Admin.KeyBoardButton.KeyButton_Main import button_menu
 from Admin.BotBackend.BotBackend_channel import handler_view_channel
-from Admin.another_def import get_previous_message
 from Admin.database.actionWithDB.general_query import get_from_db_data
 
 (BUTTON, BACK) = range(2)
@@ -15,13 +14,20 @@ from Admin.database.actionWithDB.general_query import get_from_db_data
 (ACTION_WITH_TOPIC,
 CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
-# SCHEDULER
-(SCHEDULER,
+#SCHEDULER
+(SCHEDULER, CREATE_SCHEDULER_ENTITY, SELECT_TOPIC_FROM_CHANNEL,
  SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
- EXIT_SCHEDULER) = range(9, 14)
+ EXIT_SCHEDULER) = range(9, 16)
 
 
 class HandlerForAdmin:
+
+    async def __get_previous_message(self, update, context):
+
+        message_id = update.callback_query.message.message_id
+
+        return message_id
+
 
     async def check_callback_query(self, case):
 
@@ -34,6 +40,9 @@ class HandlerForAdmin:
 
         return InlineKeyboardMarkup(keyboard)
 
+    async def get_current_topic(self, channel):
+
+        pass
 
     # Вызывается когда нажимается кнопка Назад
 
@@ -171,26 +180,3 @@ class HandlerForAdmin:
 
                 await query.edit_message_text('Пожалуйста, выберите:', reply_markup=reply_markup)
                 return BUTTON
-
-
-    async def create_sheduler_entity(self, update, context: ContextTypes.DEFAULT_TYPE):
-
-        chat_id = update.callback_query.from_user.id
-        query = update.callback_query
-        choice = query.data
-
-        await query.answer()
-
-        match choice:
-
-            case "SCHEDULER_MESSAGE":
-
-                message_id = await get_previous_message(update, context)
-
-                await context.bot.edit_message_text(chat_id=chat_id, text="Напиши текст, который нужно запланировать", message_id=message_id)
-
-                return SCHEDULER_MESSAGE
-
-            case "SCHEDULER_POLL":
-                pass
-

@@ -48,7 +48,7 @@ async def select_channel(update, context: ContextTypes.DEFAULT_TYPE):
     type_callback_query = update.callback_query.data
 
     from_user = query.from_user.id
-    get_sent_channel = query.message.reply_markup.inline_keyboard[0][0].text
+    get_sent_channel = query.message.reply_markup.inline_keyboard[0][0].text # не совсем корректно
     context.user_data["select_channel"] = get_sent_channel
 
     match type_callback_query:
@@ -69,10 +69,10 @@ async def select_channel(update, context: ContextTypes.DEFAULT_TYPE):
 async def handler_create_topic(update, context: ContextTypes.DEFAULT_TYPE):
 
     user_input = update.message.text
-    channel = context.user_data["select_channel"]
+    select_channel = context.user_data["select_channel"]
 
     data_channels = await get_from_db_data("channels")
-    id_channel = next(key for key, name in data_channels.items() if name == channel)
+    id_channel = next(key for key, name in data_channels.items() if name == select_channel)
 
     try:
         data_topic = await context.bot.createForumTopic(chat_id=id_channel, name=user_input)
@@ -85,14 +85,14 @@ async def handler_create_topic(update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(user_input, id_channel)
         raise telegram.error.BadRequest
 
-    topic = {thread_id: name_topic}
+    topic = [select_channel, thread_id, name_topic]
 
     try:
         await append_in_db_topic(topic)
 
         current_topic_at_channel = await get_topics()
 
-        await update.message.reply_text(f"Топик '{user_input}' создан. Текущие топики для канала '{channel}':\n\n{current_topic_at_channel}")
+        await update.message.reply_text(f"Топик '{user_input}' создан. Текущие топики для канала '{select_channel}':\n\n{current_topic_at_channel}")
         context.user_data.clear()
 
         return ConversationHandler.END

@@ -19,6 +19,7 @@ def createbase_for_admin():
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS topics (
         id INTEGER PRIMARY KEY,
+        channel TEXT,
         id_data INTEGER,
         name TEXT NOT NULL
     )

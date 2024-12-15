@@ -40,10 +40,10 @@ logging.basicConfig(
 (ACTION_WITH_TOPIC,
 CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
-# SCHEDULER
-(SCHEDULER,
+#SCHEDULER
+(SCHEDULER, SELECT_TOPIC_FROM_CHANNEL, CREATE_SCHEDULER_ENTITY,
  SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
- EXIT_SCHEDULER) = range(9, 14)
+ EXIT_SCHEDULER) = range(9, 16)
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -160,15 +160,25 @@ if __name__ == "__main__":
 
 
             SCHEDULER: [ConversationHandler(
-                entry_points=[CallbackQueryHandler(admin_handler.create_sheduler_entity)],
+                entry_points=[CallbackQueryHandler(scheduler.select_channel)],
                 states={
-                    SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
-                    SCHEDULER_CONFIG_DAY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
-                    CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_cheduler)]
+                    SELECT_TOPIC_FROM_CHANNEL: [CallbackQueryHandler(scheduler.select_topic_from_channel)],
+                    CREATE_SCHEDULER_ENTITY: [ConversationHandler(
+                        entry_points=[CallbackQueryHandler(scheduler.create_scheduler_entity)],
+                        states={
+                            SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
+                            SCHEDULER_CONFIG_DAY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+                            CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_scheduler)]
+                        },
+                        fallbacks=[],
+                        map_to_parent={
+                            EXIT_SCHEDULER: EXIT_SCHEDULER
+                        }
+                    )],
                 },
                 fallbacks=[],
                 map_to_parent={
-                    EXIT_SCHEDULER: ConversationHandler.END
+                    EXIT_SCHEDULER: BACK
                 })
             ],
         },
