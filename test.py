@@ -1,11 +1,21 @@
 from datetime import datetime
+import calendar
 
-set_time = "SET_TIME_12"
+my_time = datetime.today().weekday()
 
-qq = set_time.split("_")
+weekday = datetime.now().day
 
-ww = next(j for j in qq if j.isdigit())
+year, motnh, day = datetime.now().year, datetime.now().month, datetime.now().day
+day += 2
+select_weekday = calendar.weekday(year, motnh, day)
 
-print(ww)
+# print(select_weekday)
 
-print(datetime.now().day)
+
+day = 23
+
+dday = day
+
+day = 222
+
+print(day, dday)

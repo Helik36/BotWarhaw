@@ -14,9 +14,6 @@ async def get_topic_from_channel(name_channel: str) -> dict:
     query = cursor.execute("SELECT id_data, name FROM topics WHERE channel = ?",
                            [name_channel])
 
-    # for i, j in query:
-    #     print(i, j)
-
     for i, j in query:
         topics[i] = j
     conn.close()

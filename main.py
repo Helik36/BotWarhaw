@@ -42,8 +42,8 @@ CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
 #SCHEDULER
 (SCHEDULER, SELECT_TOPIC_FROM_CHANNEL, CREATE_SCHEDULER_ENTITY,
- SCHEDULER_MESSAGE, SCHEDULER_CONFIG_DAY, CONFIG_SCHEDULER,
- EXIT_SCHEDULER) = range(9, 16)
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_FREQUENCY, SCHEDULER_CONFIG_TIME, CONFIG_SCHEDULER,
+ EXIT_SCHEDULER) = range(9, 17)
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -74,6 +74,7 @@ async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(update)
     # chat_id = update.effective_chat.id
     # user_id = update.effective_user.id
     # user_name = update.effective_user.first_name
@@ -98,7 +99,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Входная точка
 async def start(update: Update, _: ContextTypes.DEFAULT_TYPE):
-    print(__name__)
 
     if update.message.from_user.id != ADMIN_ID:
         await _.bot.send_message(chat_id=update.effective_chat.id, text="Access Denied")
@@ -167,7 +167,8 @@ if __name__ == "__main__":
                         entry_points=[CallbackQueryHandler(scheduler.create_scheduler_entity)],
                         states={
                             SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
-                            SCHEDULER_CONFIG_DAY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+                            SCHEDULER_CONFIG_FREQUENCY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+                            SCHEDULER_CONFIG_TIME: [CallbackQueryHandler(scheduler.config_scheduler_time)],
                             CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_scheduler)]
                         },
                         fallbacks=[],
