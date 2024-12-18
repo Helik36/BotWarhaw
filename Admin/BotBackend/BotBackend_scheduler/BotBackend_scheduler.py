@@ -113,19 +113,15 @@ class Scheduler:
             current_weekday = calendar.weekday(year, month, current_day)
             target_weekday = int(next(i for i in target_weekday.split("_") if i.isdigit()))
 
-            if target_weekday < current_weekday:
+            if target_weekday < current_weekday or target_weekday > current_weekday:
                 while calendar.weekday(year, month, day) != target_weekday:
                     if target_weekday != current_weekday:
                         day += 1
                     else:
                         break
 
-            elif target_weekday > current_weekday:
-                while calendar.weekday(year, month, day) != target_weekday:
-                    if target_weekday != current_weekday:
-                        day += 1
-                    else:
-                        break
+            elif target_weekday == current_weekday:
+                    day += 7
 
             return day
 
@@ -133,17 +129,17 @@ class Scheduler:
 
         day = datetime.now().day
 
-
         if selected_day_week is not None:
             day = await get_day_week(selected_day_week)
 
         current_hour = datetime.now().hour - 3
+        # Если запланирован на каждый день, но текущее время больше указанного, то начать со следующего дня
         if datetime.now().day == day:
             if current_hour > get_select_hour:
                 logging.info("+day")
                 day += 1
 
-        # timedelta - Пока кажется, что он засекает ЧЕРЕЗ сколько будет запущен, но скорее всего там нужно указывать всё данные
+        # timedelta - Пока кажется, что он засекает ЧЕРЕЗ сколько будет запущен, но скорее всего там нужно указывать все данные
         # Также дату нужно указывать не с 1 по 28/30/31 а с 1 по 365 (неудобно)
 
         # datetime - засекает, и запускает в УСТАНОВЛЕННОЕ время
@@ -154,9 +150,8 @@ class Scheduler:
                            minute=0)
 
         tar_week = calendar.weekday(datetime.now().year, datetime.now().month, day)
-        logging.info("tar_week - ", tar_week)
-        logging.info("tar_week - ", calendar.day_name[tar_week])
 
+        logging.info(tar_week)
         print(setting)
         return setting
 
@@ -245,7 +240,7 @@ class Scheduler:
         context.user_data["target_text"] = target_text
 
         keyboard = [[InlineKeyboardButton("> Каждый день", callback_data='EVERY_DAY')],
-                    [InlineKeyboardButton("> Кождые N дней", callback_data='SPECIFIC_DAY')],
+                    [InlineKeyboardButton("> Каждые N-дней", callback_data='SPECIFIC_DAY')],
                     [InlineKeyboardButton("> Раз в неделю", callback_data='ONCE_AT_WEEK')],
                     [InlineKeyboardButton("< В меню", callback_data='BACK')]]
         menu_markup = InlineKeyboardMarkup(keyboard)
@@ -293,6 +288,7 @@ class Scheduler:
 
                 return SCHEDULER_CONFIG_TIME
 
+
     async def set_spicific_day(self, update, context: ContextTypes.DEFAULT_TYPE):
 
         sender_text = update.message.text
@@ -304,6 +300,7 @@ class Scheduler:
         await context.bot.send_message(chat_id=from_user, text="Выбери c какого дня недели начать", reply_markup=menu_markup)
 
         return SCHEDULER_CONFIG_TIME
+
 
     async def config_scheduler_time(self, update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -404,10 +401,7 @@ class Scheduler:
                                                         chat_id=id_channel,
                                                         data={"target_text": target_text, "topic_id": topic_id})
 
-                        if interval == next(i for i in range(2, 5)):
-                            text_insert = f"{interval} дня"
-                        else:
-                            text_insert = f"{interval} дней"
+                        text_insert = f"{interval} дня" if interval in [i for i in range(2, 5)]  else f"{interval} дней"
 
                         text_message = f"Сообщение запланировано на каждые {text_insert} в {type_callback_query} часов"
 

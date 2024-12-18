@@ -47,30 +47,7 @@ CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    """
-    Реализация:
-    По команде можно выбирается создать планировщик сообщений или опросов
-
-    Планирововщик сообщений:
-    1) Выбрать канал
-    1.1) Выбрать топик
-    2) Указать текст
-    3) Выбрать как часто
-
-    """
-
-    chat_id = update.message.from_user.id
-
-    context.bot.send_message(chat_id=chat_id, text="Напиши текст, который нужно отправлять")
-
-
-    #
-    # scheduler = Scheduler(update, context)
-    # logging.info("create scheduler message")
-    #
-    # scheduler.create_new_cheduler()
-    # context.job_queue.run_repeating(callback=scheduler_message, interval=5, chat_id=chat_id)
+    pass
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):

@@ -1,21 +1,5 @@
-from datetime import datetime
-import calendar
+print(next(i for i in range(1,5)))
 
-my_time = datetime.today().weekday()
+q = 11
 
-weekday = datetime.now().day
-
-year, motnh, day = datetime.now().year, datetime.now().month, datetime.now().day
-day += 2
-select_weekday = calendar.weekday(year, motnh, day)
-
-# print(select_weekday)
-
-
-day = 23
-
-dday = day
-
-day = 222
-
-print(day, dday)
+print(True if q in [i for i in range(1, 10)] else False)
