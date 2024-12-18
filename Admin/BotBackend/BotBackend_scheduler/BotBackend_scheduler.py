@@ -14,8 +14,8 @@ from Admin.database.actionWithDB.general_query import get_from_db_data, select_i
 
 # SCHEDULER
 (SCHEDULER, SELECT_TOPIC_FROM_CHANNEL, CREATE_SCHEDULER_ENTITY,
- SCHEDULER_MESSAGE, SCHEDULER_CONFIG_FREQUENCY, SCHEDULER_CONFIG_TIME, CONFIG_SCHEDULER,
- EXIT_SCHEDULER) = range(9, 17)
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_FREQUENCY, SELECT_SPECIFIC_DAY, SCHEDULER_CONFIG_TIME, CONFIG_SCHEDULER,
+ EXIT_SCHEDULER) = range(9, 18)
 
 
 class Scheduler:
@@ -29,9 +29,17 @@ class Scheduler:
 
     async def __query_from_user(self, update, context):
 
-        query_from_user_id = update.callback_query.from_user.id
+        if update.callback_query:
 
-        return query_from_user_id
+            # print(update)
+            query_from_user_id = update.callback_query.from_user.id
+
+            return query_from_user_id
+
+        elif update.message:
+            query_from_user_id = update.message.from_user.id
+
+            return query_from_user_id
 
 
     async def back(self, update, _):
@@ -237,7 +245,7 @@ class Scheduler:
         context.user_data["target_text"] = target_text
 
         keyboard = [[InlineKeyboardButton("> Каждый день", callback_data='EVERY_DAY')],
-                    [InlineKeyboardButton("> Конкретные дни", callback_data='SPECIFIC_DAY')],
+                    [InlineKeyboardButton("> Кождые N дней", callback_data='SPECIFIC_DAY')],
                     [InlineKeyboardButton("> Раз в неделю", callback_data='ONCE_AT_WEEK')],
                     [InlineKeyboardButton("< В меню", callback_data='BACK')]]
         menu_markup = InlineKeyboardMarkup(keyboard)
@@ -271,7 +279,11 @@ class Scheduler:
 
             case "SPECIFIC_DAY":
 
-                await context.bot.send_message(chat_id=from_user, text="Данная функция ещё не реализоваана")
+                text = "Напиши число. Например: 2\nТогда каждые 2 дня будет отправляться пост"
+
+                await context.bot.send_message(chat_id=from_user, text=text)
+
+                return SELECT_SPECIFIC_DAY
 
             case "ONCE_AT_WEEK":
 
@@ -281,6 +293,17 @@ class Scheduler:
 
                 return SCHEDULER_CONFIG_TIME
 
+    async def set_spicific_day(self, update, context: ContextTypes.DEFAULT_TYPE):
+
+        sender_text = update.message.text
+        context.user_data["select_spicific_day"] = sender_text
+
+        from_user = await self.__query_from_user(update, context)
+        menu_markup = await self.__create_days_week("ONCE_AT_WEEK")
+
+        await context.bot.send_message(chat_id=from_user, text="Выбери c какого дня недели начать", reply_markup=menu_markup)
+
+        return SCHEDULER_CONFIG_TIME
 
     async def config_scheduler_time(self, update, context: ContextTypes.DEFAULT_TYPE):
 
@@ -366,14 +389,35 @@ class Scheduler:
                         context.user_data.clear()
                         return EXIT_SCHEDULER
 
-                        # case "SET_TIME_NEXT":
-                        #
-                        #     logging.info("create scheduler message")
-                        #
-                        #     await context.bot.send_message(chat_id=chat_id, text=type_callback_query)
-                        #     # context.job_queue.run_repeating(callback=scheduler_message, interval=5, chat_id=chat_id)
-                        #
-                        #     return ConversationHandler.END
+                    case "SPECIFIC_DAY":
+
+                        logging.info("create scheduler message")
+
+                        day_week = context.user_data["day_of_week"]
+                        interval = int(context.user_data["select_spicific_day"])
+                        time_interval = timedelta(days=interval)
+
+                        first_run = await self.__setting_time(get_hour=type_callback_query, selected_day_week=day_week)
+
+                        context.job_queue.run_repeating(callback=self.__scheduler_message, interval=time_interval,
+                                                        first=first_run,
+                                                        chat_id=id_channel,
+                                                        data={"target_text": target_text, "topic_id": topic_id})
+
+                        if interval == next(i for i in range(2, 5)):
+                            text_insert = f"{interval} дня"
+                        else:
+                            text_insert = f"{interval} дней"
+
+                        text_message = f"Сообщение запланировано на каждые {text_insert} в {type_callback_query} часов"
+
+                        await context.bot.edit_message_text(
+                            text=text_message, chat_id=chat_id, message_id=message_id, reply_markup=menu_markup)
+                        print(context.job_queue.jobs())
+
+                        context.user_data.clear()
+                        return EXIT_SCHEDULER
+
 
                     case "ONCE_AT_WEEK":
 

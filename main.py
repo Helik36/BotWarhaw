@@ -42,8 +42,8 @@ CREATE_TOPIC, ADD_TOPIC, DELETE_TOPIC) = range(5, 9)
 
 #SCHEDULER
 (SCHEDULER, SELECT_TOPIC_FROM_CHANNEL, CREATE_SCHEDULER_ENTITY,
- SCHEDULER_MESSAGE, SCHEDULER_CONFIG_FREQUENCY, SCHEDULER_CONFIG_TIME, CONFIG_SCHEDULER,
- EXIT_SCHEDULER) = range(9, 17)
+ SCHEDULER_MESSAGE, SCHEDULER_CONFIG_FREQUENCY, SELECT_SPECIFIC_DAY, SCHEDULER_CONFIG_TIME, CONFIG_SCHEDULER,
+ EXIT_SCHEDULER) = range(9, 18)
 
 
 async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -74,7 +74,7 @@ async def mess(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    print(update)
+    # print(update)
     # chat_id = update.effective_chat.id
     # user_id = update.effective_user.id
     # user_name = update.effective_user.first_name
@@ -168,6 +168,7 @@ if __name__ == "__main__":
                         states={
                             SCHEDULER_MESSAGE: [MessageHandler(filters.TEXT, scheduler.setting_scheduler)],
                             SCHEDULER_CONFIG_FREQUENCY: [CallbackQueryHandler(scheduler.setting_scheduler_select_repeat)],
+                            SELECT_SPECIFIC_DAY: [MessageHandler(filters.TEXT, scheduler.set_spicific_day)],
                             SCHEDULER_CONFIG_TIME: [CallbackQueryHandler(scheduler.config_scheduler_time)],
                             CONFIG_SCHEDULER: [CallbackQueryHandler(scheduler.create_new_scheduler)]
                         },
